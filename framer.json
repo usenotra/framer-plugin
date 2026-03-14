@@ -1,0 +1,9 @@
+{
+  "id": "8dd854",
+  "name": "My Plugin",
+  "modes": [
+    "configureManagedCollection",
+    "syncManagedCollection"
+  ],
+  "icon": "/icon.svg"
+}
