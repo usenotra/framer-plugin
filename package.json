@@ -1,6 +1,6 @@
 {
-  "name": "my-plugin",
-  "version": "0.0.0",
+  "name": "notra",
+  "version": "0.0.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +9,7 @@
     "check": "ultracite check",
     "format": "ultracite fix",
     "format:unsafe": "ultracite fix --unsafe",
-    "pack": "run g:pack",
+    "pack": "npx framer-plugin-tools@latest pack",
     "preview": "vite preview"
   },
   "dependencies": {
