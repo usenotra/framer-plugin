@@ -1,9 +1,6 @@
 {
   "id": "8dd854",
-  "name": "My Plugin",
-  "modes": [
-    "configureManagedCollection",
-    "syncManagedCollection"
-  ],
+  "name": "Notra",
+  "modes": ["configureManagedCollection", "syncManagedCollection"],
   "icon": "/icon.svg"
 }

@@ -1,33 +1,48 @@
-import "framer-plugin/framer.css"
+import "framer-plugin/framer.css";
 
-import { framer } from "framer-plugin"
-import { StrictMode } from "react"
-import { createRoot } from "react-dom/client"
-import { App } from "./App.tsx"
-import { PLUGIN_KEYS, syncExistingCollection } from "./data"
+import { framer } from "framer-plugin";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { App } from "./App.tsx";
+import { PLUGIN_KEYS, syncExistingCollection } from "./util/data.ts";
 
-const activeCollection = await framer.getActiveManagedCollection()
+const activeCollection = await framer.getActiveManagedCollection();
 
-const previousDataSourceId = await activeCollection.getPluginData(PLUGIN_KEYS.DATA_SOURCE_ID)
-const previousSlugFieldId = await activeCollection.getPluginData(PLUGIN_KEYS.SLUG_FIELD_ID)
+const previousApiKey = await activeCollection.getPluginData(
+  PLUGIN_KEYS.API_KEY
+);
+const previousDataSourceId = await activeCollection.getPluginData(
+  PLUGIN_KEYS.DATA_SOURCE_ID
+);
+const previousSlugFieldId = await activeCollection.getPluginData(
+  PLUGIN_KEYS.SLUG_FIELD_ID
+);
 
-const { didSync } = await syncExistingCollection(activeCollection, previousDataSourceId, previousSlugFieldId)
+const { didSync } = await syncExistingCollection(
+  activeCollection,
+  previousDataSourceId,
+  previousSlugFieldId,
+  previousApiKey
+);
 
 if (didSync) {
-    framer.closePlugin("Synchronization successful", {
-        variant: "success",
-    })
+  framer.closePlugin("Synchronization successful", {
+    variant: "success",
+  });
 } else {
-    const root = document.getElementById("root")
-    if (!root) throw new Error("Root element not found")
+  const root = document.getElementById("root");
+  if (!root) {
+    throw new Error("Root element not found");
+  }
 
-    createRoot(root).render(
-        <StrictMode>
-            <App
-                collection={activeCollection}
-                previousDataSourceId={previousDataSourceId}
-                previousSlugFieldId={previousSlugFieldId}
-            />
-        </StrictMode>
-    )
+  createRoot(root).render(
+    <StrictMode>
+      <App
+        collection={activeCollection}
+        previousApiKey={previousApiKey}
+        previousDataSourceId={previousDataSourceId}
+        previousSlugFieldId={previousSlugFieldId}
+      />
+    </StrictMode>
+  );
 }

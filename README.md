@@ -1,19 +1,20 @@
-# CMS Starter
+# Notra
 
-This is a starter for building a CMS plugin for Framer.
+Framer plugin to import content from [Notra](https://usenotra.com) into CMS collections.
 
-Run the development server:
+## Development
+
+Run the dev server (uses a proxy to avoid CORS when fetching from the Notra API):
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-And [open in Framer](https://www.framer.com/developers/plugins/quick-start#opening-in-framer).
+Then [open in Framer](https://www.framer.com/developers/plugins/quick-start#opening-in-framer).
 
-Learn more: https://www.framer.com/developers/plugins/introduction
+## Production CORS
+
+For the published plugin, the Notra API must allow requests from Framer plugin domains. See [Framer CORS docs](https://www.framer.com/developers/plugins-cors). The API should allow:
+
+- `https://8dd854.plugins.framercdn.com`
+- `https://8dd854-[versionId].plugins.framercdn.com`
