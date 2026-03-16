@@ -51,9 +51,20 @@ input[type="text"]:disabled,
 }
 
 .logo {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
   color: var(--framer-color-text-tertiary);
   background-color: var(--framer-color-bg-tertiary);
-  border-radius: 8px;
+  border: 1px solid var(--framer-color-divider);
+  border-radius: 12px;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
+}
+
+.logo-mark {
+  display: block;
+  color: var(--framer-color-text-secondary);
 }
 
 .setup {
