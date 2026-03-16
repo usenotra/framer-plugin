@@ -73,11 +73,12 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Build release archive
+        env:
+          VERSION: ${{ needs.detect-version.outputs.version }}
         shell: bash
         run: |
           bun run pack
-          version="${{ needs.detect-version.outputs.version }}"
-          mv plugin.zip "notra-v${version}.zip"
+          mv plugin.zip "notra-v${VERSION}.zip"
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
