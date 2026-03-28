@@ -37,6 +37,7 @@ interface NotraPost {
   id: string;
   markdown: string;
   recommendations: string | null;
+  slug: string | null;
   status: string;
   title: string;
   updatedAt: string;
@@ -56,17 +57,45 @@ interface NotraPostsResponse {
 const NOTRA_FIELDS: ManagedCollectionFieldInput[] = [
   { id: "id", name: "ID", type: "string" },
   { id: "title", name: "Title", type: "string" },
+  { id: "slug", name: "Slug", type: "string" },
   { id: "content", name: "Content", type: "formattedText" },
   { id: "status", name: "Status", type: "string" },
 ];
 
+function slugifyValue(value: string): string {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function getPostSlug(post: NotraPost): string {
+  if (post.slug) {
+    return post.slug;
+  }
+
+  const titleSlug = slugifyValue(post.title);
+  if (titleSlug) {
+    return titleSlug;
+  }
+
+  return post.id;
+}
+
 function postToFieldData(post: NotraPost): FieldDataInput {
-  return {
+  const slug = getPostSlug(post);
+  const fieldData: FieldDataInput = {
     id: { type: "string", value: post.id },
     title: { type: "string", value: post.title },
+    slug: { type: "string", value: slug },
     content: { type: "formattedText", value: post.content },
     status: { type: "string", value: post.status },
   };
+
+  return fieldData;
 }
 
 /**
