@@ -4,7 +4,8 @@ import { framer } from "framer-plugin";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App.tsx";
-import { PLUGIN_KEYS, syncExistingCollection } from "./util/data.ts";
+import { PLUGIN_KEYS } from "./util/constants.ts";
+import { syncExistingCollection } from "./util/data.ts";
 
 const activeCollection = await framer.getActiveManagedCollection();
 

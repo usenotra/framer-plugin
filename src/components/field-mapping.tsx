@@ -5,16 +5,14 @@ import {
   useIsAllowedTo,
 } from "framer-plugin";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { DataSource } from "../types/data";
+import { dataSourceOptions, PLUGIN_KEYS, syncMethods } from "../util/constants";
 import {
-  type DataSource,
-  dataSourceOptions,
   getDataSource,
-  mergeFieldsWithExistingFields,
-  PLUGIN_KEYS,
   setStoredAllowDrafts,
   syncCollection,
-  syncMethods,
 } from "../util/data";
+import { mergeFieldsWithExistingFields } from "../util/utils";
 
 interface FieldMappingRowProps {
   disabled: boolean;

@@ -4,7 +4,8 @@ import { framer, type ManagedCollection } from "framer-plugin";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { FieldMapping } from "./components/field-mapping";
 import { SelectDataSource } from "./components/select-data-source";
-import { type DataSource, getDataSource, setStoredApiKey } from "./util/data";
+import type { DataSource } from "./types/data";
+import { getDataSource, setStoredApiKey } from "./util/data";
 
 interface AppProps {
   collection: ManagedCollection;

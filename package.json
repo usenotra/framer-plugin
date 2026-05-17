@@ -9,7 +9,7 @@
     "check": "ultracite check",
     "format": "ultracite fix",
     "format:unsafe": "ultracite fix --unsafe",
-    "pack": "npx framer-plugin-tools@latest pack",
+    "pack": "framer-plugin-tools pack",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -24,6 +24,7 @@
     "@types/react": "^18.3.24",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react-swc": "^4.0.1",
+    "framer-plugin-tools": "1.2.1",
     "globals": "^16.4.0",
     "jiti": "^2.5.1",
     "typescript": "^5.9.2",

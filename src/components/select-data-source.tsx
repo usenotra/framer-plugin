@@ -2,11 +2,9 @@ import { DatabaseIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { framer } from "framer-plugin";
 import { useState } from "react";
-import {
-  type DataSource,
-  dataSourceOptions,
-  getDataSource,
-} from "../util/data";
+import type { DataSource } from "../types/data";
+import { dataSourceOptions } from "../util/constants";
+import { getDataSource } from "../util/data";
 
 interface SelectDataSourceProps {
   onSelectDataSource: (dataSource: DataSource, apiKey: string) => void;

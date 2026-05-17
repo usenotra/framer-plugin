@@ -4,99 +4,16 @@ import {
   type ManagedCollection,
   type ManagedCollectionFieldInput,
   type ManagedCollectionItemInput,
-  type ProtectedMethod,
 } from "framer-plugin";
-
-export const PLUGIN_KEYS = {
-  API_KEY: "apiKey",
-  ALLOW_DRAFTS: "allowDrafts",
-  DATA_SOURCE_ID: "dataSourceId",
-  SLUG_FIELD_ID: "slugFieldId",
-} as const;
-
-// Use proxy in dev to avoid CORS (Framer plugin loads from localhost)
-const NOTRA_API_BASE = import.meta.env.DEV
-  ? `${typeof window === "undefined" ? "" : window.location.origin}/api/notra/v1`
-  : "https://api.usenotra.com/v1";
-
-export interface DataSource {
-  fields: readonly ManagedCollectionFieldInput[];
-  id: string;
-  items: FieldDataInput[];
-}
-
-export const dataSourceOptions = [
-  { id: "blog_post", name: "Blog Posts" },
-  { id: "changelog", name: "Changelogs" },
-] as const;
-
-interface NotraPost {
-  content: string;
-  contentType: string;
-  createdAt: string;
-  id: string;
-  markdown: string;
-  recommendations: string | null;
-  slug: string | null;
-  status: string;
-  title: string;
-  updatedAt: string;
-}
-
-interface NotraPostsResponse {
-  pagination: {
-    limit: number;
-    currentPage: number;
-    nextPage: number | null;
-    totalPages: number;
-    totalItems: number;
-  };
-  posts: NotraPost[];
-}
-
-const NOTRA_FIELDS: ManagedCollectionFieldInput[] = [
-  { id: "id", name: "ID", type: "string" },
-  { id: "title", name: "Title", type: "string" },
-  { id: "slug", name: "Slug", type: "string" },
-  { id: "content", name: "Content", type: "formattedText" },
-  { id: "status", name: "Status", type: "string" },
-];
-
-function slugifyValue(value: string): string {
-  return value
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-function getPostSlug(post: NotraPost): string {
-  if (post.slug) {
-    return post.slug;
-  }
-
-  const titleSlug = slugifyValue(post.title);
-  if (titleSlug) {
-    return titleSlug;
-  }
-
-  return post.id;
-}
-
-function postToFieldData(post: NotraPost): FieldDataInput {
-  const slug = getPostSlug(post);
-  const fieldData: FieldDataInput = {
-    id: { type: "string", value: post.id },
-    title: { type: "string", value: post.title },
-    slug: { type: "string", value: slug },
-    content: { type: "formattedText", value: post.content },
-    status: { type: "string", value: post.status },
-  };
-
-  return fieldData;
-}
+import type { DataSource, NotraPost, NotraPostsResponse } from "../types/data";
+import {
+  MAX_ITEMS,
+  NOTRA_API_BASE,
+  NOTRA_FIELDS,
+  PLUGIN_KEYS,
+} from "./constants";
+import { validatePostsResponse } from "./schemas";
+import { getStringValue, postToFieldData, toValidItemId } from "./utils";
 
 /**
  * Fetch posts from Notra API and map to Framer DataSource format.
@@ -149,6 +66,11 @@ export async function getDataSource(
     }
 
     const data = (await response.json()) as NotraPostsResponse;
+    validatePostsResponse(data, page);
+    if (allPosts.length + data.posts.length > MAX_ITEMS) {
+      throw new Error(`Notra API returned more than ${MAX_ITEMS} posts`);
+    }
+
     allPosts.push(...data.posts);
 
     if (
@@ -157,7 +79,7 @@ export async function getDataSource(
     ) {
       break;
     }
-    page += 1;
+    page = data.pagination.nextPage;
   }
 
   const items = allPosts.map((post) => postToFieldData(post));
@@ -167,39 +89,6 @@ export async function getDataSource(
     fields: NOTRA_FIELDS,
     items,
   };
-}
-
-export function mergeFieldsWithExistingFields(
-  sourceFields: readonly ManagedCollectionFieldInput[],
-  existingFields: readonly ManagedCollectionFieldInput[]
-): ManagedCollectionFieldInput[] {
-  return sourceFields.map((sourceField) => {
-    const existingField = existingFields.find(
-      (existingField) => existingField.id === sourceField.id
-    );
-    if (existingField) {
-      return { ...sourceField, name: existingField.name };
-    }
-    return sourceField;
-  });
-}
-
-const MAX_SLUG_LENGTH = 64;
-
-/**
- * Framer collection item ids must be ≤64 chars. Shorten with a hash suffix when needed.
- */
-function toValidItemId(slug: string): string {
-  if (slug.length <= MAX_SLUG_LENGTH) {
-    return slug;
-  }
-  let hash = 0;
-  for (let i = 0; i < slug.length; i++) {
-    hash = (hash << 5) - hash + slug.charCodeAt(i);
-    hash &= 0x7f_ff_ff_ff;
-  }
-  const suffix = `-${hash.toString(36).slice(0, 8)}`;
-  return slug.slice(0, MAX_SLUG_LENGTH - suffix.length) + suffix;
 }
 
 export async function syncCollection(
@@ -217,15 +106,24 @@ export async function syncCollection(
       throw new Error("Logic error");
     }
 
-    const slugValue = item[slugField.id];
-    if (!slugValue || typeof slugValue.value !== "string") {
+    const sourceId = getStringValue(item, "id");
+    if (!sourceId) {
+      throw new Error(`Item at index ${i} does not have a valid source ID`);
+    }
+
+    const slugValue = getStringValue(item, slugField.id);
+    if (!slugValue) {
       console.warn(
         `Skipping item at index ${i} because it doesn't have a valid slug`
       );
       continue;
     }
 
-    const itemId = toValidItemId(slugValue.value);
+    const itemId = toValidItemId(sourceId.trim());
+    const slug = slugValue.trim();
+    if (!slug) {
+      throw new Error(`Item “${sourceId}” has an empty slug`);
+    }
     unsyncedItems.delete(itemId);
 
     const fieldData: FieldDataInput = {};
@@ -244,10 +142,27 @@ export async function syncCollection(
 
     items.push({
       id: itemId,
-      slug: itemId,
-      draft: false,
+      slug,
+      draft: getStringValue(item, "status") === "draft",
       fieldData,
     });
+  }
+
+  const seenItemIds = new Set<string>();
+  const seenSlugs = new Map<string, string>();
+  for (const item of items) {
+    if (seenItemIds.has(item.id)) {
+      throw new Error(`Duplicate source item ID “${item.id}” found`);
+    }
+    seenItemIds.add(item.id);
+
+    const previousItemId = seenSlugs.get(item.slug);
+    if (previousItemId) {
+      throw new Error(
+        `Duplicate slug “${item.slug}” found for items “${previousItemId}” and “${item.id}”`
+      );
+    }
+    seenSlugs.set(item.slug, item.id);
   }
 
   await collection.removeItems(Array.from(unsyncedItems));
