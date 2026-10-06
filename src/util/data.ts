@@ -18,7 +18,7 @@ import { getStringValue, postToFieldData, toValidItemId } from "./utils";
 /**
  * Fetch posts from Notra API and map to Framer DataSource format.
  * Paginates through all results.
- * @see https://docs.usenotra.com/api-reference/content/list-posts
+ * @see https://www.usenotra.com/docs/api-reference/content/list-posts
  */
 export async function getDataSource(
   apiKey: string,
